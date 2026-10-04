@@ -1,0 +1,63 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// A mini-league, and which Telegram chat it's linked to
+model League {
+  id             Int            @id
+  name           String
+  telegramChatId BigInt?        @unique
+  createdAt      DateTime       @default(now())
+  members        LeagueMember[]
+}
+
+// A person playing FPL
+model Manager {
+  id         Int               @id
+  playerName String
+  teamName   String
+  leagues    LeagueMember[]
+  gameweeks  ManagerGameweek[]
+}
+
+// Who is in which league (many-to-many)
+model LeagueMember {
+  leagueId  Int
+  managerId Int
+  league    League  @relation(fields: [leagueId], references: [id])
+  manager   Manager @relation(fields: [managerId], references: [id])
+
+  @@id([leagueId, managerId])
+}
+
+// GW1 to GW38
+model Gameweek {
+  id           Int               @id
+  name         String
+  deadlineTime DateTime
+  finished     Boolean           @default(false)
+  results      ManagerGameweek[]
+}
+
+// One manager's result in one gameweek
+model ManagerGameweek {
+  managerId    Int
+  gameweekId   Int
+  points       Int
+  totalPoints  Int
+  transferCost Int
+  benchPoints  Int
+  chip         String?
+
+  manager      Manager  @relation(fields: [managerId], references: [id])
+  gameweek     Gameweek @relation(fields: [gameweekId], references: [id])
+
+  @@id([managerId, gameweekId])
+}
+
