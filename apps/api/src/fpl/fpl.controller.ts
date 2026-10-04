@@ -14,4 +14,9 @@ export class FplController {
   getPlayer(@Param('id', ParseIntPipe) id: number) {
     return this.fplService.getPlayerDetails(id);
   }
+
+  @Get('managers/:id')
+  getManager(@Param('id', ParseIntPipe) id: number) {
+    return this.fplService.getManager(id);
+  }
 }

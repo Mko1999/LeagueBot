@@ -2,32 +2,35 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 const FPL_BASE_URL = 'https://fantasy.premierleague.com/api';
 
+// Naming: "player" = a footballer (FPL calls it "element"),
+// "manager" = a person playing FPL (FPL calls it "entry").
 @Injectable()
 export class FplService {
-  async getLeagueStandings(leagueId: number): Promise<unknown> {
-    const response = await fetch(
-      `${FPL_BASE_URL}/leagues-classic/${leagueId}/standings/`,
+  getLeagueStandings(leagueId: number): Promise<unknown> {
+    return this.fetchFpl(
+      `/leagues-classic/${leagueId}/standings/`,
+      `League ${leagueId}`,
     );
+  }
+
+  getPlayerDetails(playerId: number): Promise<unknown> {
+    return this.fetchFpl(`/element-summary/${playerId}/`, `Player ${playerId}`);
+  }
+
+  getManager(managerId: number): Promise<unknown> {
+    return this.fetchFpl(`/entry/${managerId}/`, `Manager ${managerId}`);
+  }
+
+  private async fetchFpl(path: string, resourceName: string): Promise<unknown> {
+    const response = await fetch(`${FPL_BASE_URL}${path}`);
+
     if (response.status === 404) {
-      throw new NotFoundException(`League with ID ${leagueId} not found`);
+      throw new NotFoundException(`${resourceName} not found`);
     }
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch league standings: ${response.statusText}`,
+        `FPL API request ${path} failed: ${response.status} ${response.statusText}`,
       );
-    }
-    return response.json();
-  }
-
-  async getPlayerDetails(playerId: number): Promise<unknown> {
-    const response = await fetch(
-      `${FPL_BASE_URL}/element-summary/${playerId}/`,
-    );
-    if (response.status === 404) {
-      throw new NotFoundException(`Player with ID ${playerId} not found`);
-    }
-    if (!response.ok) {
-      throw new Error(`Failed to fetch player details: ${response.statusText}`);
     }
     return response.json();
   }
