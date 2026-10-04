@@ -1,11 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-const FPL_BASE_URL = 'https://fantasy.premierleague.com/api';
+import { ConfigService } from '@nestjs/config';
 
 // Naming: "player" = a footballer (FPL calls it "element"),
 // "manager" = a person playing FPL (FPL calls it "entry").
 @Injectable()
 export class FplService {
+  private readonly baseUrl: string;
+  constructor(private readonly configService: ConfigService) {
+    this.baseUrl = this.configService.get<string>(
+      'FPL_BASE_URL',
+      'https://fantasy.premierleague.com/api',
+    );
+  }
+
   getLeagueStandings(leagueId: number): Promise<unknown> {
     return this.fetchFpl(
       `/leagues-classic/${leagueId}/standings/`,
@@ -22,7 +29,7 @@ export class FplService {
   }
 
   private async fetchFpl(path: string, resourceName: string): Promise<unknown> {
-    const response = await fetch(`${FPL_BASE_URL}${path}`);
+    const response = await fetch(`${this.baseUrl}${path}`);
 
     if (response.status === 404) {
       throw new NotFoundException(`${resourceName} not found`);
